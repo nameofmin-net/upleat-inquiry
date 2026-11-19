@@ -107,7 +107,9 @@
         store.clear()
         showGate(e.status === 403 ? "이 키로는 문의 내역을 읽을 수 없습니다. 읽기 권한(Pro)이 있는 키인지 확인해 주세요." : "API 키가 올바르지 않습니다.")
       } else {
-        $("meta").textContent = "불러오지 못했습니다: " + e.message
+        const m = "불러오지 못했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요. (" + e.message + ")"
+        $("meta").textContent = m
+        if (!$("gate").classList.contains("hidden")) $("gate-msg").textContent = m
       }
       return false
     } finally {
