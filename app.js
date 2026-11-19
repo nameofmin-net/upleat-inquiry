@@ -7,7 +7,7 @@
   "use strict"
 
   // Apps Script 웹 앱 주소 (배포 후 받은 /exec URL)
-  const SHEET_API = ""
+  const SHEET_API = "https://script.google.com/macros/s/AKfycbyRJGGwc_5aO_lw0Mvo_-t7J5rgcoTbjhAVuy-e6wRnRRldkfYeemJZY4VRKg7bw8xB/exec"
   const TABS = [
     { id: "upleat", label: "유플리트" },
     { id: "safeu", label: "세이프유" },
