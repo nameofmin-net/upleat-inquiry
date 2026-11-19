@@ -69,8 +69,20 @@ function doGet(e) {
   return json_({ ok: true, data: out })
 }
 
+// 저장할 스프레드시트: 시트에서 연 스크립트면 그 시트, 아니면(단독 스크립트) setup이 만든 시트
+function ss_() {
+  const active = SpreadsheetApp.getActiveSpreadsheet()
+  if (active) return active
+  const props = PropertiesService.getScriptProperties()
+  const id = props.getProperty("SHEET_ID")
+  if (id) return SpreadsheetApp.openById(id)
+  const created = SpreadsheetApp.create("U PLEAT 문의함")
+  props.setProperty("SHEET_ID", created.getId())
+  return created
+}
+
 function sheet_(name) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const ss = ss_()
   let sh = ss.getSheetByName(name)
   if (!sh) {
     sh = ss.insertSheet(name)
@@ -94,6 +106,14 @@ function json_(o) {
 }
 
 // 설치 직후 한 번 실행하면 두 시트(유플리트/세이프유)를 미리 만들어 둡니다.
+// 실행 로그에 저장되는 스프레드시트 주소가 찍힙니다.
 function setup() {
   Object.values(SHEETS).forEach(sheet_)
+  const ss = ss_()
+  // 빈 기본 시트(시트1/Sheet1) 정리
+  ss.getSheets().forEach((sh) => {
+    if (!Object.values(SHEETS).includes(sh.getName()) && sh.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(sh)
+  })
+  Logger.log("저장 위치: " + ss.getUrl())
+  Logger.log("탭: " + ss.getSheets().map((s) => s.getName()).join(", "))
 }
