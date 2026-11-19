@@ -1,21 +1,21 @@
-/* U PLEAT 문의함 — Web3Forms Submissions API 뷰어
- * - API 키는 브라우저(localStorage/sessionStorage)에만 보관. 저장소·서버에는 아무것도 남지 않음.
- * - 탭: 폼 Access Key(form_id) 기준으로 유플리트 / 세이프유 분리.
+/* U PLEAT 문의함 — 구글 시트(Apps Script) 뷰어
+ * - 홈페이지 문의 폼이 Apps Script로 보낸 내용을 구글 시트 '유플리트' / '세이프유'에 저장 → 이 페이지가 읽어서 표시.
+ * - 열람 비밀번호는 브라우저(localStorage/sessionStorage)에만 보관. 저장소에는 비밀번호·문의 데이터 없음.
  * - 제출 내용은 사용자 입력이므로 화면에 넣을 때 항상 textContent 사용(XSS 방지).
  */
 (() => {
   "use strict"
 
-  const API = "https://api.web3forms.com/v1"
+  // Apps Script 웹 앱 주소 (배포 후 받은 /exec URL)
+  const SHEET_API = ""
   const TABS = [
-    { id: "upleat", label: "유플리트", formId: "3fa30200-b6f4-45f1-977a-051c4496a023", match: /유플리트|upleat|main/i },
-    { id: "safeu", label: "세이프유", formId: "d8ae0c60-0f48-47dc-90be-93afc86a744e", match: /세이프유|safe\s*u/i },
+    { id: "upleat", label: "유플리트" },
+    { id: "safeu", label: "세이프유" },
   ]
   // 화면 목록에서 숨기는 시스템 칸 (상세 하단 '시스템 정보'에만 표시)
-  const SYSTEM = new Set(["access_key", "subject", "from_name", "replyto", "sender", "botcheck", "h-captcha-response", "g-recaptcha-response", "redirect"])
+  const SYSTEM = new Set(["ID", "접수일시", "접수 페이지"])
   const ORDER = ["문의 유형", "회사명", "이름", "업무 이메일", "연락처", "부서", "직책", "내용", "개인정보 수집·이용 동의"]
-  const KEY_STORE = "upleat-inquiry-key"
-  const MAX_PAGES = 30 // 100건 × 30 = 최대 3,000건
+  const KEY_STORE = "upleat-inquiry-pw"
 
   const $ = (id) => document.getElementById(id)
   const el = (tag, cls, text) => {
@@ -42,72 +42,49 @@
   let apiKey = ""
   const state = { tab: "upleat", forms: [], data: {}, loadedAt: null, query: "", selected: null }
 
-  // ── API ─────────────────────────────────
-  async function call(path) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const res = await fetch(API + path, { headers: { Authorization: "Bearer " + apiKey, Accept: "application/json" } })
-      if (res.status === 429) {
-        const wait = Math.min(10, Number(res.headers.get("Retry-After")) || 2)
-        await new Promise((r) => setTimeout(r, wait * 1000))
-        continue
-      }
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        const err = new Error(json?.error?.message || "HTTP " + res.status)
-        err.status = res.status
-        throw err
-      }
-      return json
+  // ── 데이터 ──────────────────────────────
+  async function fetchSheet() {
+    if (!SHEET_API) {
+      const err = new Error("아직 구글 시트 연결 주소가 설정되지 않았습니다.")
+      err.status = 0
+      throw err
     }
-    throw new Error("요청이 많아 잠시 후 다시 시도해 주세요.")
+    const res = await fetch(SHEET_API + "?key=" + encodeURIComponent(apiKey), { method: "GET", redirect: "follow" })
+    const json = await res.json().catch(() => ({}))
+    if (!json.ok) {
+      const err = new Error(json.error || "HTTP " + res.status)
+      err.status = json.error === "unauthorized" ? 401 : res.status
+      throw err
+    }
+    return json.data || {}
   }
 
-  async function fetchAll(formId) {
-    const out = []
-    let cursor = ""
-    for (let i = 0; i < MAX_PAGES; i++) {
-      const q = "?form_id=" + encodeURIComponent(formId) + "&limit=100" + (cursor ? "&cursor=" + encodeURIComponent(cursor) : "")
-      const r = await call("/submissions" + q)
-      out.push(...(r.data || []))
-      if (!r.has_more || !r.next_cursor) break
-      cursor = r.next_cursor
-    }
-    return out
-  }
-
-  // 탭 ↔ 폼 연결: form_id가 Access Key와 같으면 그걸, 아니면 폼 이름으로
-  function resolveTabs(forms) {
-    const used = new Set()
-    const tabs = TABS.map((t) => {
-      let f = forms.find((x) => x.form_id === t.formId) || forms.find((x) => !used.has(x.form_id) && t.match.test(x.form_name || ""))
-      if (f) used.add(f.form_id)
-      return { ...t, form: f || null }
-    })
-    // 연결 안 된 폼도 숨기지 않고 탭으로 보여줌
-    forms.filter((f) => !used.has(f.form_id)).forEach((f) => tabs.push({ id: "f_" + f.form_id, label: f.form_name || "기타 폼", form: f }))
-    return tabs
+  // 시트 한 줄 → 화면용 객체
+  const toSub = (r, i) => {
+    const fields = {}
+    Object.keys(r).forEach((k) => { if (!SYSTEM.has(k)) fields[k] = r[k] })
+    return { id: String(r["ID"] || i), submitted_at: r["접수일시"], site_url: r["접수 페이지"] || "", fields }
   }
 
   async function load() {
     setBusy(true)
     $("meta").textContent = "불러오는 중…"
     try {
-      const forms = (await call("/forms")).data || []
-      state.forms = resolveTabs(forms)
-      const results = await Promise.all(state.forms.map((t) => (t.form ? fetchAll(t.form.form_id) : Promise.resolve([]))))
+      const data = await fetchSheet()
+      state.forms = TABS.map((t) => ({ ...t, form: true }))
       state.data = {}
-      state.forms.forEach((t, i) => (state.data[t.id] = results[i]))
+      TABS.forEach((t) => (state.data[t.id] = (data[t.id] || []).map(toSub)))
       state.loadedAt = new Date()
-      if (!state.forms.some((t) => t.id === state.tab)) state.tab = state.forms[0]?.id || "upleat"
       renderTabs()
       render()
       return true
     } catch (e) {
-      if (e.status === 401 || e.status === 403) {
+      if (e.status === 401) {
         store.clear()
-        showGate(e.status === 403 ? "이 키로는 문의 내역을 읽을 수 없습니다. 읽기 권한(Pro)이 있는 키인지 확인해 주세요." : "API 키가 올바르지 않습니다.")
+        apiKey = ""
+        showGate("비밀번호가 올바르지 않습니다.")
       } else {
-        const m = "불러오지 못했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요. (" + e.message + ")"
+        const m = "불러오지 못했습니다. " + e.message
         $("meta").textContent = m
         if (!$("gate").classList.contains("hidden")) $("gate-msg").textContent = m
       }
@@ -128,7 +105,7 @@
     const v = s.fields?.[k]
     return v == null || v === "입력없음" ? "" : String(v)
   }
-  const fieldEmail = (s) => field(s, "업무 이메일") || field(s, "email") || field(s, "replyto")
+  const fieldEmail = (s) => field(s, "업무 이메일")
 
   function filtered() {
     const list = state.data[state.tab] || []
@@ -192,7 +169,7 @@
     })
     const empty = $("empty")
     if (!tab?.form) {
-      empty.textContent = "연결된 폼을 찾지 못했습니다. Web3Forms 대시보드의 폼 이름이나 Access Key를 확인해 주세요."
+      empty.textContent = "시트를 찾지 못했습니다."
     } else if (!list.length) {
       empty.textContent = state.query ? "검색 결과가 없습니다." : "아직 접수된 문의가 없습니다."
     }
@@ -226,13 +203,7 @@
       dl.appendChild(dd)
       body.appendChild(dl)
     })
-    const sys = [
-      "제목: " + (s.fields?.subject || "-"),
-      "접수 페이지: " + (s.site_url || "-"),
-      "IP: " + (s.ip_address || "-"),
-      "브라우저: " + (s.user_agent || "-"),
-      "ID: " + s.id,
-    ].join("\n")
+    const sys = ["접수 페이지: " + (s.site_url || "-"), "ID: " + s.id].join("\n")
     body.appendChild(el("div", "sys", sys))
     $("dim").classList.add("on")
     const d = $("drawer")
@@ -306,7 +277,7 @@
   // ── 이벤트 ──────────────────────────────
   $("enter").addEventListener("click", async () => {
     const k = $("key").value.trim()
-    if (!k) { $("gate-msg").textContent = "API 키를 입력해 주세요."; return }
+    if (!k) { $("gate-msg").textContent = "비밀번호를 입력해 주세요."; return }
     apiKey = k
     $("gate-msg").textContent = ""
     store.set(k, $("remember").checked)
@@ -315,7 +286,7 @@
   $("key").addEventListener("keydown", (e) => { if (e.key === "Enter") $("enter").click() })
   $("refresh").addEventListener("click", async () => { if (await load()) toast("최신 내역을 불러왔습니다.") })
   $("csv").addEventListener("click", exportCSV)
-  $("logout").addEventListener("click", () => { store.clear(); apiKey = ""; state.data = {}; showGate("키를 지웠습니다.") })
+  $("logout").addEventListener("click", () => { store.clear(); apiKey = ""; state.data = {}; showGate("로그아웃했습니다.") })
   window.matchMedia("(max-width:720px)").addEventListener("change", () => { if (state.loadedAt) render() })
   $("q").addEventListener("input", (e) => { state.query = e.target.value; render() })
   $("dim").addEventListener("click", closeDetail)
