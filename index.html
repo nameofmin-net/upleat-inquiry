@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.web3forms.com; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<title>U PLEAT 문의함</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F1F1F; --ink-2:#3A3A3A; --mute:#7A7A7A; --mute-2:#999; --line:#E5E5E5; --line-2:#D4D4D4;
+  --bg:#F3F3F3; --card:#FFFFFF; --accent:#0029D2; --danger:#D93025;
+  --mono:"Geist Mono", ui-monospace, monospace; --sans:"IBM Plex Sans KR", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+.hidden{display:none !important}
+.wrap{max-width:1280px;margin:0 auto;padding:32px 32px 80px}
+@media (max-width:720px){.wrap{padding:20px 16px 64px}}
+
+/* top */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.02em;font-size:18px}
+.brand small{display:block;font:400 12px var(--mono);color:var(--mute);letter-spacing:.04em;margin-bottom:6px}
+h1{margin:4px 0 0;font-size:32px;font-weight:500;letter-spacing:-.01em}
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line-2);background:transparent;cursor:pointer;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--ink)}
+.btn.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.solid:hover{background:#000}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.tab:focus-visible,.row:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* tabs + tools */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line-2);margin-bottom:20px;flex-wrap:wrap}
+.tabs{display:flex;gap:4px}
+.tab{position:relative;border:0;background:transparent;padding:12px 4px 14px;margin-right:20px;cursor:pointer;font-size:18px;color:var(--mute)}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:500}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink)}
+.tab .n{font:400 12px var(--mono);margin-left:6px;color:var(--mute-2)}
+.tools{display:flex;gap:8px;align-items:center;padding-bottom:10px;flex-wrap:wrap}
+.search{height:40px;width:260px;max-width:100%;padding:0 14px;border-radius:999px;border:1px solid var(--line-2);background:#fff}
+.meta-line{font:400 12px var(--mono);color:var(--mute);margin:0 0 12px}
+
+/* table */
+.card{background:var(--card);border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse}
+th{font:500 12px var(--mono);color:var(--mute);text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.02em}
+td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.row{cursor:pointer}
+.row:hover td{background:#FAFAFA}
+.row.sel td{background:#F1F3FD}
+.date{font:400 13px var(--mono);color:var(--ink-2);white-space:nowrap}
+.pill{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.clip{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.empty{padding:64px 16px;text-align:center;color:var(--mute)}
+@media (max-width:900px) and (min-width:721px){.hide-m{display:none}}
+@media (max-width:720px){
+  .tools,.search{width:100%}
+  .card{background:transparent;border:0;border-radius:0}
+  thead{display:none}
+  table,tbody{display:block}
+  tr.row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}
+  tr.row td{display:block;padding:0;border:0;background:transparent !important}
+  tr.row td.c-date{grid-column:1/2;order:1}
+  tr.row td.c-type{grid-column:2/3;order:2;text-align:right}
+  tr.row td.c-who{grid-column:1/3;order:3;font-size:16px;font-weight:500}
+  tr.row td.c-mail,tr.row td.c-tel{grid-column:1/3;order:4;color:var(--ink-2);font-size:14px}
+  tr.row td.c-tel{order:5}
+  tr.row td.c-msg{grid-column:1/3;order:6}
+  tr.row td.c-msg .clip{max-width:none;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  tr.row td.c-name{display:none}
+  tr.row.sel{outline:2px solid var(--accent)}
+  td:empty{display:none !important}
+}
+
+/* detail drawer */
+.dim{position:fixed;inset:0;background:rgba(16,16,16,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+.dim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(520px,100%);background:#fff;transform:translateX(100%);transition:transform .28s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;z-index:10}
+.drawer.on{transform:none}
+.d-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:24px 24px 16px;border-bottom:1px solid var(--line)}
+.d-head h2{margin:0;font-size:20px;font-weight:500;line-height:1.4;word-break:keep-all}
+.d-head .sub{font:400 12px var(--mono);color:var(--mute);margin-top:6px}
+.x{width:40px;height:40px;border:0;background:transparent;border-radius:999px;cursor:pointer;flex:none}
+.x:hover{background:var(--bg)}
+.d-body{overflow-y:auto;padding:8px 24px 32px}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.kv dt{font:400 12px var(--mono);color:var(--mute);padding-top:2px}
+.kv dd{margin:0;white-space:pre-wrap;word-break:break-word}
+.kv dd a{color:var(--accent)}
+.sys{margin-top:20px;font:400 12px var(--mono);color:var(--mute-2);white-space:pre-wrap;word-break:break-all}
+
+/* key gate */
+.gate{max-width:520px;margin:12vh auto 0;background:#fff;border-radius:16px;padding:32px;border:1px solid var(--line)}
+.gate h1{font-size:24px;margin:0 0 8px}
+.gate p{color:var(--mute);margin:0 0 20px;font-size:14px}
+.gate label{display:block;font:400 12px var(--mono);color:var(--mute);margin-bottom:8px}
+.gate input[type=password]{width:100%;height:48px;padding:0 14px;border-radius:10px;border:1px solid var(--line-2);font-family:var(--mono);font-size:14px}
+.gate .chk{display:flex;gap:8px;align-items:center;margin:14px 0 20px;font-size:14px;color:var(--ink-2)}
+.gate .btn{width:100%;height:48px}
+.msg{min-height:20px;margin-top:12px;font-size:13px;color:var(--danger)}
+.note{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);line-height:1.6}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- 키 입력 -->
+<section id="gate" class="gate hidden" aria-labelledby="gate-title">
+  <div class="brand"><small>(INQUIRY)</small>U PLEAT</div>
+  <h1 id="gate-title" style="margin-top:20px">문의함</h1>
+  <p>Web3Forms API 키를 입력하면 홈페이지 문의 내역을 불러옵니다. 키는 이 브라우저에만 저장되고 어디에도 전송·기록되지 않습니다.</p>
+  <label for="key">API KEY</label>
+  <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="w3f_live_…">
+  <label class="chk"><input id="remember" type="checkbox" checked> 이 브라우저에 기억하기</label>
+  <button id="enter" class="btn solid" type="button">불러오기</button>
+  <div id="gate-msg" class="msg" role="alert"></div>
+  <div class="note">API 키는 Web3Forms 대시보드 → Account → API Keys에서 '읽기 전용'으로 발급하세요(Pro 플랜). 공용 PC에서는 '기억하기'를 끄세요.</div>
+</section>
+
+<!-- 대시보드 -->
+<main id="app" class="wrap hidden">
+  <header class="top">
+    <div>
+      <div class="brand"><small>(INQUIRY)</small>U PLEAT</div>
+      <h1>홈페이지 문의함</h1>
+    </div>
+    <div class="top-actions">
+      <button id="refresh" class="btn" type="button">새로고침</button>
+      <button id="csv" class="btn" type="button">CSV 내보내기</button>
+      <button id="logout" class="btn" type="button">키 지우기</button>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="문의 구분" id="tabs"></div>
+    <div class="tools">
+      <input id="q" class="search" type="search" placeholder="회사명·이름·이메일·내용 검색" aria-label="검색">
+    </div>
+  </div>
+  <p class="meta-line" id="meta"></p>
+
+  <div class="card" role="tabpanel" id="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>접수일시</th><th>문의 유형</th><th>회사명</th><th>이름</th><th class="hide-m">이메일</th><th class="hide-m">연락처</th><th class="hide-m">내용</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty" class="empty hidden"></div>
+  </div>
+</main>
+
+<div id="dim" class="dim"></div>
+<aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="d-title" aria-hidden="true">
+  <div class="d-head">
+    <div><h2 id="d-title"></h2><div class="sub" id="d-sub"></div></div>
+    <button class="x" id="d-close" type="button" aria-label="닫기">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="d-body" id="d-body"></div>
+</aside>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
